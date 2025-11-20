@@ -9,6 +9,13 @@ const SidebarItem = ({ icon: Icon, text, active }) => (
 );
 
 const Layout = ({ children }) => {
+
+    const logout = async () => {
+        await api.post("/user/logout");
+        setAuthUser(null);
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+    };
     return (
         <div className="flex h-screen bg-slate-900 text-slate-200 font-sans">
             {/* Sidebar */}
@@ -34,7 +41,7 @@ const Layout = ({ children }) => {
                             <p className="text-xs text-slate-500">Editor Role</p>
                         </div>
                     </div>
-                    <button className="flex items-center space-x-2 text-red-400 hover:text-red-300 text-sm">
+                    <button className="flex items-center space-x-2 text-red-400 hover:text-red-300 text-sm" onClick={logout}>
                         <LogOut size={16} />
                         <span>Logout</span>
                     </button>

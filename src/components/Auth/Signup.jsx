@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, KeyRound, UserPlus } from "lucide-react"; // Consistent icons
+import toast from "react-hot-toast";
+import api from "../../api/axios";
 
 function Signup() {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -18,8 +22,23 @@ function Signup() {
   };
 
   const onSubmit = async (data) => {
-    console.log(data);
-    // API Logic
+    setLoading(true)
+    try {
+      const res = await api.post("/user/register", data);
+
+      if (res.data.success) {
+        setAuthUser(res.data.user);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
+        navigate("/dashboard");
+      } else {
+        toast(res.data.message);
+      }
+    } catch (err) {
+      toast(err.response?.data?.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,8 +131,24 @@ function Signup() {
               type="submit"
               className="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-              <UserPlus size={18} className="mr-2" />
-              Create Account
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full flex justify-center items-center px-4 py-3 rounded-lg font-medium transition-colors duration-200 
+                ${loading ? "bg-blue-800" : "bg-blue-600 hover:bg-blue-700"} text-white`}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Signing In...</span>
+                </div>
+              ) : (
+                <>
+                 <UserPlus size={18} className="mr-2" />
+                  Create Account
+                </>
+              )}
             </button>
           </div>
 
