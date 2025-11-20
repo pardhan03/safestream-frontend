@@ -20,4 +20,12 @@ export const getMyVideos = () => {
   return api.get("/video/all");
 };
 
+export const changePassword = (newPassword) => {
+  return api.put("/user/change-password", { newPassword });
+};
+
+export const deleteVideo = (videoId) => {
+  return api.delete(`/video/${videoId}`);
+};
+
 export default api;

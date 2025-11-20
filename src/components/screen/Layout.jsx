@@ -1,17 +1,35 @@
-import React from 'react';
-import { LayoutDashboard, Upload, PlaySquare, Settings, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutDashboard, PlaySquare, Settings, LogOut, User } from 'lucide-react';
+import api from '../../api/axios';
+import { useAuth } from '../../context/AuthProvider';
+import { Link, useLocation } from 'react-router-dom';
 
-const SidebarItem = ({ icon: Icon, text, active }) => (
-    <div className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${active ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-400'}`}>
-        <Icon size={20} />
-        <span className="font-medium">{text}</span>
-    </div>
-);
+const SidebarItem = ({ icon: Icon, text, to }) => {
+    const location = useLocation();
+    const isActive = location.pathname === to;
+
+    return (
+        <Link
+            to={to}
+            className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all duration-150 ${isActive
+                    ? 'bg-blue-600 text-white shadow-md font-semibold'
+                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                }`}
+        >
+            <Icon className="w-5 h-5" />
+            <span className="text-sm">{text}</span>
+        </Link>
+    );
+};
+
 
 const Layout = ({ children }) => {
+    const [currentPage, setCurrentPage] = useState('dashboard');
+    const { authUser, setAuthUser } = useAuth();
 
     const logout = async () => {
-        await api.post("/user/logout");
+        const res = await api.post("/user/logout");
+        console.log('res', res)
         setAuthUser(null);
         localStorage.removeItem("user");
         window.location.href = "/login";
@@ -26,29 +44,30 @@ const Layout = ({ children }) => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">
-                    <SidebarItem icon={LayoutDashboard} text="Dashboard" active />
-                    <SidebarItem icon={PlaySquare} text="My Videos" />
-                    <SidebarItem icon={Settings} text="Settings" />
+                    <SidebarItem icon={LayoutDashboard} text="Dashboard" to="/dashboard" />
+                    <SidebarItem icon={PlaySquare} text="My Videos" to="/my-videos" />
+                    <SidebarItem icon={Settings} text="Settings" to="/settings" />
                 </nav>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="pt-4 border-t border-slate-700">
                     <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">
-                            JD
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                            <User size={18} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium">John Doe</p>
-                            <p className="text-xs text-slate-500">Editor Role</p>
+                            <p className="text-sm font-semibold text-white">{authUser?.username || 'User'}</p>
+                            <p className="text-xs text-slate-400">{authUser?.role || 'Basic'}</p>
                         </div>
                     </div>
-                    <button className="flex items-center space-x-2 text-red-400 hover:text-red-300 text-sm" onClick={logout}>
-                        <LogOut size={16} />
-                        <span>Logout</span>
+                    <button
+                        onClick={logout}
+                        className="flex items-center space-x-3 w-full p-3 rounded-lg text-red-400 hover:bg-slate-700 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span className="text-sm">Logout</span>
                     </button>
                 </div>
             </aside>
-
-            {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
                 <div className="p-8">
                     {children}

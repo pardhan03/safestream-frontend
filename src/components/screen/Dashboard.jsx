@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Upload, Play, AlertTriangle, CheckCircle, Loader2, MoreVertical } from 'lucide-react';
 import UploadModal from './UploadModal';
-import { uploadVideo, getMyVideos } from '../../api/axios';
+import { uploadVideo, getMyVideos, deleteVideo } from '../../api/axios';
 import { useAuth } from '../../context/AuthProvider';
 import { connectSocket, getSocket } from '../../utils/socket';
+import VideoPlayer from './VideoPlayer';
 
 const StatusBadge = ({ status, sensitivity, progress }) => {
     if (status === 'processing') {
@@ -35,6 +36,7 @@ const StatusBadge = ({ status, sensitivity, progress }) => {
 const Dashboard = () => {
     const [videos, setVideos] = useState([]);
     const [isUploadModalOpen, setUploadModalOpen] = useState(false);
+    const [playingVideo, setPlayingVideo] = useState(null);
     const { authUser } = useAuth();
 
     const fetchVideos = async () => {
@@ -60,29 +62,29 @@ const Dashboard = () => {
     }, []);
 
     useEffect(() => {
-        if (authUser) {
-            connectSocket(authUser._id);
-            const s = getSocket();
-            s.on("video:progress", ({ videoId, progress }) => {
-                setVideos(prev => prev.map(v => v._id === videoId ? { ...v, progress, status: 'processing' } : v));
-            });
-            s.on("video:completed", ({ videoId, status, sensitivity }) => {
-                setVideos(prev => prev.map(v => v._id === videoId ? { ...v, status: status === 'completed' ? 'completed' : 'failed', sensitivity, progress: 100 } : v));
-            });
-            s.on("video:uploaded", ({ videoId }) => {
-                fetchVideos();
-            });
-        }
+        if (!authUser) return;
+
+        const s = connectSocket(authUser._id);
+
+        s.on("video:progress", ({ videoId, progress }) => {
+            setVideos(prev =>
+                prev.map(v => v._id === videoId ? { ...v, progress, status: "processing" } : v)
+            );
+        });
+
+        s.on("video:completed", ({ videoId, status, sensitivity }) => {
+            setVideos(prev =>
+                prev.map(v => v._id === videoId ?
+                    { ...v, status, sensitivity, progress: 100 } : v
+                )
+            );
+        });
+
         return () => {
-            const s = getSocket();
-            if (s) {
-                s.off("video:progress");
-                s.off("video:completed");
-                s.off("video:uploaded");
-            }
+            s.off("video:progress");
+            s.off("video:completed");
         };
     }, [authUser]);
-
     return (
         <>
             <div className="space-y-6">
@@ -108,7 +110,10 @@ const Dashboard = () => {
                                 <th className="px-6 py-4">Upload Date</th>
                                 <th className="px-6 py-4">Size</th>
                                 <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                {authUser?.role === "Admin" && (
+                                    <th className="px-6 py-4 text-right">Actions</th>
+                                )}
+
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700">
@@ -123,9 +128,9 @@ const Dashboard = () => {
                                     <tr key={video._id} className="hover:bg-slate-700/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-10 h-10 bg-slate-700 rounded flex items-center justify-center">
-                                                    <Play size={16} className="text-slate-400" />
-                                                </div>
+                                                <button onClick={() => setPlayingVideo(video)} className="text-slate-400 hover:text-white p-1">
+                                                    <Play size={16} />
+                                                </button>
                                                 <span className="font-medium text-white">{video.originalName}</span>
                                             </div>
                                         </td>
@@ -142,11 +147,19 @@ const Dashboard = () => {
                                                 progress={video.progress}
                                             />
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="text-slate-400 hover:text-white p-1">
-                                                <MoreVertical size={16} />
-                                            </button>
-                                        </td>
+                                        {authUser?.role === "Admin" && (
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={async () => {
+                                                        await deleteVideo(video._id);
+                                                        fetchVideos();
+                                                    }}
+                                                    className="text-red-400 hover:text-red-600 p-1"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             )}
@@ -160,6 +173,9 @@ const Dashboard = () => {
                     onClose={() => setUploadModalOpen(false)}
                     onUpload={handleUpload}
                 />
+            )}
+            {playingVideo && (
+                <VideoPlayer video={playingVideo} onClose={() => setPlayingVideo(null)} />
             )}
         </>
     );
