@@ -3,9 +3,12 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, LogIn } from "lucide-react"; // using consistent icons
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthProvider";
+import api from "../../api/axios";
 
 function Login() {
   const [loading, setLoading] = useState(false);
+  const { setAuthUser } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -15,11 +18,9 @@ function Login() {
 
   const onSubmit = async (data) => {
     setLoading(true);
-
     try {
       const res = await api.post("/user/login", data);
-
-      if (res.data.success) {
+      if (res.data?.success) {
         setAuthUser(res.data.user);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         navigate("/dashboard");

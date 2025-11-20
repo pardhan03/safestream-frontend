@@ -4,9 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, KeyRound, UserPlus } from "lucide-react"; // Consistent icons
 import toast from "react-hot-toast";
 import api from "../../api/axios";
+import { useAuth } from "../../context/AuthProvider";
 
 function Signup() {
   const [loading, setLoading] = useState(false);
+  const { setAuthUser } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -127,11 +129,11 @@ function Signup() {
 
           {/* Submit Button */}
           <div className="pt-2">
-            <button
+            {/* <button
               type="submit"
               className="w-full flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200"
             >
-            </button>
+            </button> */}
             <button
               type="submit"
               disabled={loading}
