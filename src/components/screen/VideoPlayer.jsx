@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 const VideoPlayer = ({ video, onClose }) => {
-  const [quality, setQuality] = useState("original"); // options: original, p360, p720, p1080
+  const [quality, setQuality] = useState("original");
   const videoRef = useRef(null);
 
   const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -16,6 +16,26 @@ const VideoPlayer = ({ video, onClose }) => {
     }
   }, [quality, video]);
 
+  // Handle escape key to close
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  const handleClose = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.src = ''; // Clear src to stop loading
+    }
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="w-full max-w-4xl bg-slate-900 rounded-xl overflow-hidden">
@@ -25,7 +45,7 @@ const VideoPlayer = ({ video, onClose }) => {
             <select
               value={quality}
               onChange={(e) => setQuality(e.target.value)}
-              className="bg-slate-800 text-white p-2 rounded"
+              className="bg-slate-800 text-white p-2 rounded text-sm"
             >
               <option value="original">Original</option>
               <option value="p1080">1080p</option>
@@ -33,27 +53,31 @@ const VideoPlayer = ({ video, onClose }) => {
               <option value="p360">360p</option>
             </select>
             <button
-              onClick={() => {
-                if (videoRef.current) videoRef.current.pause();
-                onClose();
-              }}
-              className="text-slate-300 hover:text-white px-3 py-1"
+              onClick={handleClose}
+              className="text-slate-300 hover:text-white px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition-colors"
             >
               Close
             </button>
           </div>
         </div>
 
-        <div className="bg-black">
+        <div className="bg-black aspect-video flex items-center justify-center">
           <video
             ref={videoRef}
             controls
-            style={{ width: "100%", height: "auto", backgroundColor: "black" }}
-          />
+            className="w-full h-full max-h-[70vh]"
+            style={{ backgroundColor: "black" }}
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
 
-        <div className="p-4 text-slate-300">
-          <div className="text-sm">Status: {video.status} · Sensitivity: {video.sensitivity}</div>
+        <div className="p-4 text-slate-300 text-sm">
+          <div className="flex justify-between">
+            <span>Status: {video.status}</span>
+            <span>Sensitivity: {video.sensitivity}</span>
+            <span>Quality: {quality}</span>
+          </div>
         </div>
       </div>
     </div>

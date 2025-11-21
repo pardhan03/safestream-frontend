@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Upload, Play, AlertTriangle, CheckCircle, Loader2, MoreVertical } from 'lucide-react';
+import { Upload, Play, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import UploadModal from './UploadModal';
 import { uploadVideo, getMyVideos, deleteVideo } from '../../api/axios';
 import { useAuth } from '../../context/AuthProvider';
@@ -16,7 +16,7 @@ const StatusBadge = ({ status, sensitivity, progress }) => {
         );
     }
 
-    if (sensitivity === 'flagged') {
+    if (status === 'completed' && sensitivity === 'flagged') {
         return (
             <div className="flex items-center text-red-500 text-xs bg-red-500/10 px-2 py-1 rounded-full w-fit">
                 <AlertTriangle size={12} className="mr-1" />
@@ -25,10 +25,19 @@ const StatusBadge = ({ status, sensitivity, progress }) => {
         );
     }
 
+    if (status === 'completed' && sensitivity === 'safe') {
+        return (
+            <div className="flex items-center text-green-500 text-xs bg-green-500/10 px-2 py-1 rounded-full w-fit">
+                <CheckCircle size={12} className="mr-1" />
+                Safe
+            </div>
+        );
+    }
+
+    // Default case for other statuses
     return (
-        <div className="flex items-center text-green-500 text-xs bg-green-500/10 px-2 py-1 rounded-full w-fit">
-            <CheckCircle size={12} className="mr-1" />
-            Safe
+        <div className="flex items-center text-slate-400 text-xs bg-slate-500/10 px-2 py-1 rounded-full w-fit">
+            {status}
         </div>
     );
 };
@@ -62,29 +71,49 @@ const Dashboard = () => {
     }, []);
 
     useEffect(() => {
-        if (!authUser) return;
+    if (!authUser) return;
 
-        const s = connectSocket(authUser._id);
+    const s = connectSocket(authUser._id);
 
-        s.on("video:progress", ({ videoId, progress }) => {
-            setVideos(prev =>
-                prev.map(v => v._id === videoId ? { ...v, progress, status: "processing" } : v)
-            );
-        });
+    s.on("video:progress", ({ videoId, progress, status }) => {
+        setVideos(prev =>
+            prev.map(v => v._id === videoId ? { 
+                ...v, 
+                progress, 
+                status: status || "processing" // Ensure status is updated
+            } : v)
+        );
+    });
 
-        s.on("video:completed", ({ videoId, status, sensitivity }) => {
-            setVideos(prev =>
-                prev.map(v => v._id === videoId ?
-                    { ...v, status, sensitivity, progress: 100 } : v
-                )
-            );
-        });
+    s.on("video:completed", ({ videoId, status, sensitivity }) => {
+        console.log("Video completed:", { videoId, status, sensitivity }); // Debug log
+        setVideos(prev =>
+            prev.map(v => v._id === videoId ?
+                { 
+                    ...v, 
+                    status: status || "completed", 
+                    sensitivity: sensitivity || "safe",
+                    progress: 100 
+                } : v
+            )
+        );
+    });
 
-        return () => {
-            s.off("video:progress");
-            s.off("video:completed");
-        };
-    }, [authUser]);
+    // Add error handling
+    s.on("video:uploaded", ({ videoId }) => {
+        setVideos(prev =>
+            prev.map(v => v._id === videoId ? 
+                { ...v, status: "uploaded" } : v
+            )
+        );
+    });
+
+    return () => {
+        s.off("video:progress");
+        s.off("video:completed");
+        s.off("video:uploaded");
+    };
+}, [authUser]);
     return (
         <>
             <div className="space-y-6">
