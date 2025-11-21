@@ -11,24 +11,46 @@ const api = axios.create({
   },
 });
 
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const uploadVideo = (formData) => {
   return api.post("/video/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
+      ...getAuthHeader(),
     },
   });
 };
 
 export const getMyVideos = () => {
-  return api.get("/video/all");
+  return api.get("/video/all", {
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
 };
 
 export const changePassword = (newPassword) => {
-  return api.put("/user/change-password", { newPassword });
+  return api.put(
+    "/user/change-password",
+    { newPassword },
+    {
+      headers: {
+        ...getAuthHeader(),
+      },
+    }
+  );
 };
 
 export const deleteVideo = (videoId) => {
-  return api.delete(`/video/${videoId}`);
+  return api.delete(`/video/${videoId}`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
 };
 
 export default api;
