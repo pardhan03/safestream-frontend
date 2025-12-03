@@ -5,52 +5,57 @@ const BASE_URL =
 
 const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+// Request interceptor - automatically add Authorization header to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - handle 401 errors (token expired/invalid)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const uploadVideo = (formData) => {
   return api.post("/video/upload", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      ...getAuthHeader(),
     },
   });
 };
 
 export const getMyVideos = () => {
-  return api.get("/video/all", {
-    headers: {
-      ...getAuthHeader(),
-    },
-  });
+  return api.get("/video/all");
 };
 
 export const changePassword = (newPassword) => {
-  return api.put(
-    "/user/change-password",
-    { newPassword },
-    {
-      headers: {
-        ...getAuthHeader(),
-      },
-    }
-  );
+  return api.put("/user/change-password", { newPassword });
 };
 
 export const deleteVideo = (videoId) => {
-  return api.delete(`/video/${videoId}`, {
-    headers: {
-      ...getAuthHeader(),
-    },
-  });
+  return api.delete(`/video/${videoId}`);
 };
 
 export default api;

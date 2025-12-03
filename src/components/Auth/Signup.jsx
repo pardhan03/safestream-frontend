@@ -31,7 +31,9 @@ function Signup() {
       if (res.data.success) {
         setAuthUser(res.data.user);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token); // Store token for Authorization header
+        }
         navigate("/dashboard");
       } else {
         toast(res.data.message);

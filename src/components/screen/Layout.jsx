@@ -27,11 +27,11 @@ const Layout = ({ children }) => {
     const [currentPage, setCurrentPage] = useState('dashboard');
     const { authUser, setAuthUser } = useAuth();
 
-    const logout = async () => {
-        const res = await api.post("/user/logout");
-        console.log('res', res)
-        setAuthUser(null);
+    const logout = () => {
+        // Clear auth data from localStorage
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        setAuthUser(null);
         window.location.href = "/login";
     };
     return (
@@ -55,7 +55,7 @@ const Layout = ({ children }) => {
                             <User size={18} />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-white">{authUser?.username || 'User'}</p>
+                            <p className="text-sm font-semibold text-white">{authUser?.fullname || 'User'}</p>
                             <p className="text-xs text-slate-400">{authUser?.role || 'Basic'}</p>
                         </div>
                     </div>

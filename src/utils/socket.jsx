@@ -13,7 +13,7 @@ const getSocketURL = () => {
 export const connectSocket = (userId) => {
   if (!socket) {
     const socketURL = getSocketURL();
-    socket = io(socketURL, { withCredentials: true });
+    socket = io(socketURL);
 
     socket.on("connect", () => {
       console.log("socket connected", socket.id);
@@ -23,6 +23,5 @@ export const connectSocket = (userId) => {
 
   return socket;
 };
-
 
 export const getSocket = () => socket;

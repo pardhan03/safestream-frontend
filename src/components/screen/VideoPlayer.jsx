@@ -9,8 +9,13 @@ const VideoPlayer = ({ video, onClose }) => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.pause();
-      const qparam = quality === "original" ? "" : `?q=${quality}`;
-      videoRef.current.src = `${API_BASE}/api/video/stream/${video._id}${qparam}`;
+      const token = localStorage.getItem("token");
+      // Build query params - include token for auth since video elements can't send headers
+      const params = new URLSearchParams();
+      if (quality !== "original") params.append("q", quality);
+      if (token) params.append("token", token);
+      const queryString = params.toString() ? `?${params.toString()}` : "";
+      videoRef.current.src = `${API_BASE}/api/video/stream/${video._id}${queryString}`;
       videoRef.current.load();
       videoRef.current.play().catch(() => {});
     }
