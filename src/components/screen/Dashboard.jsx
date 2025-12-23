@@ -3,7 +3,7 @@ import { Upload, Play, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import UploadModal from './UploadModal';
 import { uploadVideo, getMyVideos, deleteVideo } from '../../api/axios';
 import { useAuth } from '../../context/AuthProvider';
-import { connectSocket, getSocket } from '../../utils/socket';
+import { connectSocket } from '../../utils/socket';
 import VideoPlayer from './VideoPlayer';
 
 const StatusBadge = ({ status, sensitivity, progress }) => {
@@ -70,6 +70,22 @@ const Dashboard = () => {
         fetchVideos();
     }, []);
 
+    // Fallback polling: if Socket.IO is down (e.g., Render hibernation),
+    // progress still updates in DB, so we poll while any videos are processing.
+    useEffect(() => {
+        const hasInFlight = videos?.some(
+            (v) => (v?.status === "processing" || v?.status === "uploaded") && (v?.progress ?? 0) < 100
+        );
+
+        if (!hasInFlight) return;
+
+        const id = setInterval(() => {
+            fetchVideos();
+        }, 2000);
+
+        return () => clearInterval(id);
+    }, [videos]);
+
     useEffect(() => {
     if (!authUser) return;
 
@@ -77,7 +93,7 @@ const Dashboard = () => {
 
     s.on("video:progress", ({ videoId, progress, status }) => {
         setVideos(prev =>
-            prev.map(v => v._id === videoId ? { 
+            prev.map(v => String(v._id) === String(videoId) ? { 
                 ...v, 
                 progress, 
                 status: status || "processing" // Ensure status is updated
@@ -88,7 +104,7 @@ const Dashboard = () => {
     s.on("video:completed", ({ videoId, status, sensitivity }) => {
         console.log("Video completed:", { videoId, status, sensitivity }); // Debug log
         setVideos(prev =>
-            prev.map(v => v._id === videoId ?
+            prev.map(v => String(v._id) === String(videoId) ?
                 { 
                     ...v, 
                     status: status || "completed", 
@@ -102,7 +118,7 @@ const Dashboard = () => {
     // Add error handling
     s.on("video:uploaded", ({ videoId }) => {
         setVideos(prev =>
-            prev.map(v => v._id === videoId ? 
+            prev.map(v => String(v._id) === String(videoId) ? 
                 { ...v, status: "uploaded" } : v
             )
         );
