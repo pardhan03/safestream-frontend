@@ -72,19 +72,27 @@ const Dashboard = () => {
 
     // Fallback polling: if Socket.IO is down (e.g., Render hibernation),
     // progress still updates in DB, so we poll while any videos are processing.
+    // useEffect(() => {
+    //     const hasInFlight = videos?.some(
+    //         (v) => (v?.status === "processing" || v?.status === "uploaded") && (v?.progress ?? 0) < 100
+    //     );
+
+    //     if (!hasInFlight) return;
+
+    //     const id = setInterval(() => {
+    //         fetchVideos();
+    //     }, 2000);
+
+    //     return () => clearInterval(id);
+    // }, [videos]);
+
     useEffect(() => {
-        const hasInFlight = videos?.some(
-            (v) => (v?.status === "processing" || v?.status === "uploaded") && (v?.progress ?? 0) < 100
-        );
-
-        if (!hasInFlight) return;
-
         const id = setInterval(() => {
             fetchVideos();
-        }, 2000);
+        }, 3000);
 
         return () => clearInterval(id);
-    }, [videos]);
+    }, []);
 
     useEffect(() => {
     if (!authUser) return;
