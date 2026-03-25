@@ -7,6 +7,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute'
 import Layout from './components/screen/Layout'
 import NotFound from './components/screen/NotFound'
 import Setting from './components/screen/Setting'
+import Admin from './components/screen/Admin'
 
 function App() {
   return (
@@ -21,6 +22,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Admin />
               </Layout>
             </ProtectedRoute>
           }

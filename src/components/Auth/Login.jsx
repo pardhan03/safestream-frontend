@@ -31,7 +31,11 @@ function Login() {
         toast(res.data.message);
       }
     } catch (err) {
-      toast(err.response?.data?.message || "Login failed");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Login failed. Please try again.";
+      toast(msg);
     } finally {
       setLoading(false);
     }

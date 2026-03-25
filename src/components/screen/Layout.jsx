@@ -44,8 +44,10 @@ const Layout = ({ children }) => {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">
+                    {authUser?.role === "Admin" && (
+                        <SidebarItem icon={Settings} text="Admin" to="/admin" />
+                    )}
                     <SidebarItem icon={LayoutDashboard} text="Dashboard" to="/dashboard" />
-                    <SidebarItem icon={PlaySquare} text="My Videos" to="/my-videos" />
                     <SidebarItem icon={Settings} text="Settings" to="/settings" />
                 </nav>
 

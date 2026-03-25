@@ -12,11 +12,11 @@ const UploadModal = ({ onClose, onUpload }) => {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) return;
     const formData = new FormData();
     formData.append("video", file);
-    onUpload(formData);
+    await onUpload(formData);
     onClose();
   };
 
@@ -38,7 +38,7 @@ const UploadModal = ({ onClose, onUpload }) => {
             >
               <UploadCloud className="mx-auto text-blue-500 mb-4" size={48} />
               <p className="text-lg font-medium text-white mb-2">Select files to upload</p>
-              <p className="text-slate-400 text-sm mb-6">MP4, WEBM, or OGG (Max 2GB)</p>
+              <p className="text-slate-400 text-sm mb-6">MP4, WEBM, or OGG (Max 50MB)</p>
 
               <button
                 onClick={() => filePicker.current.click()}

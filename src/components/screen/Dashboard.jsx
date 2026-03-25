@@ -5,6 +5,7 @@ import { uploadVideo, getMyVideos, deleteVideo } from '../../api/axios';
 import { useAuth } from '../../context/AuthProvider';
 import { connectSocket } from '../../utils/socket';
 import VideoPlayer from './VideoPlayer';
+import toast from 'react-hot-toast';
 
 const StatusBadge = ({ status, sensitivity, progress }) => {
     if (status === 'processing') {
@@ -59,32 +60,16 @@ const Dashboard = () => {
 
     const handleUpload = async (formData) => {
         try {
-            const res = await uploadVideo(formData);
-            fetchVideos();
-        } catch (error) {
-            console.log(error);
+          await uploadVideo(formData);
+          fetchVideos();
+        } catch (err) {
+          toast(err.response?.data?.message || "Upload failed. Please try again.");
         }
-    };
+      };
 
     useEffect(() => {
         fetchVideos();
     }, []);
-
-    // Fallback polling: if Socket.IO is down (e.g., Render hibernation),
-    // progress still updates in DB, so we poll while any videos are processing.
-    // useEffect(() => {
-    //     const hasInFlight = videos?.some(
-    //         (v) => (v?.status === "processing" || v?.status === "uploaded") && (v?.progress ?? 0) < 100
-    //     );
-
-    //     if (!hasInFlight) return;
-
-    //     const id = setInterval(() => {
-    //         fetchVideos();
-    //     }, 2000);
-
-    //     return () => clearInterval(id);
-    // }, [videos]);
 
     useEffect(() => {
         const id = setInterval(() => {

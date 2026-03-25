@@ -39,7 +39,11 @@ function Signup() {
         toast(res.data.message);
       }
     } catch (err) {
-      toast(err.response?.data?.message || "Signup failed");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Signup failed. Please try again.";
+      toast(msg);
     } finally {
       setLoading(false);
     }
@@ -126,6 +130,21 @@ function Signup() {
             </div>
             {errors.confirmPassword && (
               <span className="text-red-400 text-xs">{errors.confirmPassword.message}</span>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-300">Organization ID</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="org-123"
+                className="w-full pl-4 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                {...register("organizationId", { required: true })}
+              />
+            </div>
+            {errors.organizationId && (
+              <span className="text-red-400 text-xs">Organization ID is required</span>
             )}
           </div>
 
